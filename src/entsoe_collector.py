@@ -32,6 +32,12 @@ class EntsoeData(object):
     api_start_date: pd.Timestamp
     api_end_date: pd.Timestamp
     country_code: str
+    api_forecast_end_date: pd.Timestamp
+
+    def __post_init__(self):
+        if self.api_forecast_end_date is None:
+            self.api_forecast_end_date = pd.Timestamp(
+                "2023-06-20 00:00:00", tz="Europe/Brussels")
 
     def collector(self) -> EntsoePandasClient:
         client = EntsoePandasClient(api_key=os.environ["ENTSOE_API_KEY"])
@@ -53,8 +59,9 @@ class Generation(EntsoeData):
             country_code=self.country_code, start=self.api_start_date, end=self.api_end_date)
         if isinstance(generation_raw.columns, pd.MultiIndex):
             generation_raw.columns = generation_raw.columns.droplevel(level=1)
-        #remove duplicated columns
-        generation_raw = generation_raw.loc[:,~generation_raw.columns.duplicated()].copy()
+        # remove duplicated columns
+        generation_raw = generation_raw.loc[:, ~
+                                            generation_raw.columns.duplicated()].copy()
         return generation_raw
 
     def process(self, generation_raw) -> pd.DataFrame:
@@ -142,5 +149,36 @@ class Prices(EntsoeData):
         prices_raw: pd.DataFrame = client.query_day_ahead_prices(
             country_code=self.country_code, start=self.api_start_date, end=self.api_end_date)
         prices_raw = prices_raw.to_frame()
-        prices_raw= prices_raw.rename( columns={0 :'Price'})
+        prices_raw = prices_raw.rename(columns={0: 'Price'})
         return prices_raw
+
+
+class Forecast(EntsoeData):
+    def fetch_generation(self) -> pd.DataFrame:
+        client: EntsoePandasClient = self.collector()
+        generation_forecast: pd.DataFrame = client.query_generation_forecast(
+            country_code=self.country_code, start=self.api_start_date, end=self.api_forecast_end_date)
+        generation_forecast = generation_forecast.to_frame()
+        generation_forecast = generation_forecast.rename(
+            columns={'Actual Aggregated': 'Generation_forecast'})
+        return generation_forecast
+
+    def fetch_renewables(self) -> pd.DataFrame:
+        client: EntsoePandasClient = self.collector()
+        renewables_forecast: pd.DataFrame = client.query_wind_and_solar_forecast(
+            country_code=self.country_code, start=self.api_start_date, end=self.api_forecast_end_date)
+        return renewables_forecast
+    
+    def calculate_emission_forecas(self):
+        generation_forecast = self.fetch_generation()
+        renewables_forecast = self.fetch_renewables()
+        renewables_forecast["Sum"]=renewables_forecast.sum(axis="columns")
+        generation_forecast['NonRenewables'] = generation_forecast.Generation_forecast - renewables_forecast.Sum
+        forecast_cei = pd.DataFrame(columns=['Solar','Wind_off','Wind_on','NonRenewables'])
+        forecast_cei["Solar"] = renewables_forecast["Solar"]*1e3 * CO2_FACTORS['Solar']/ 1e6
+        forecast_cei["Wind_on"] = renewables_forecast["Wind Onshore"]*1e3 * CO2_FACTORS['Wind_on']/ 1e6
+        forecast_cei["Wind_off"] = renewables_forecast["Wind Offshore"]*1e3 * CO2_FACTORS['Wind_off']/ 1e6
+        forecast_cei["NonRenewables"] = generation_forecast['NonRenewables']*1e3 * 10 / 1e6
+        forecast_cei["Total"] = forecast_cei.sum(axis="columns")
+        forecast_cei["Carbon_Intensity"] = (forecast_cei["Total"] * 1e6 / (generation_forecast["Generation_forecast"] * 1e3))
+        return forecast_cei
