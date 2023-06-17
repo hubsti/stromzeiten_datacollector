@@ -3,7 +3,7 @@
 CO2_FACTORS: dict[str, int] = {
     "Biomass": 230,
     "Lignite": 1104,
-    "Gas": 602,
+    "Gas": 515,
     "Coal": 1104,
     "Oil": 1125,
     "Geothermal": 38,
