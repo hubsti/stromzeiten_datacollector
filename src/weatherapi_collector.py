@@ -1,10 +1,7 @@
-import datetime
-import json
 import os
 from dataclasses import dataclass
 
 import pandas as pd
-from pytz import timezone
 import requests
 
 from utils.weatherapi_tags import CURRENT_WEATHER_TAGS, WEATHER_TAGS
