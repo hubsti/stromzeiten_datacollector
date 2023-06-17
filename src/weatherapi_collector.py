@@ -7,7 +7,7 @@ import pandas as pd
 from pytz import timezone
 import requests
 
-from utils.weatherapi_tags import CURRENT_WEATHER_TAGS, WEATHER_TAGS
+from util.weatherapi_tags import CURRENT_WEATHER_TAGS, WEATHER_TAGS
 
 WEATHERAPI_URL: str = 'http://api.weatherapi.com/v1/'
 
@@ -64,8 +64,6 @@ class CurrentWeather(WeatherAPIData):
             f'{WEATHERAPI_URL}current.json?key={os.environ["API_KEY_WEATHERAPI"]}&q={self.location}&aqi=yes')
         current_weather_raw: pd.DataFrame = pd.json_normalize(req.json())
         current_weather_raw = current_weather_raw[CURRENT_WEATHER_TAGS].copy()
-        current_weather_raw = current_weather_raw.drop('time_epoch', axis=1)
-        current_weather_raw = current_weather_raw.drop('wind_dir', axis=1)
         return current_weather_raw
 
 
@@ -81,6 +79,8 @@ class WeatherForecast(WeatherAPIData):
         req = requests.Response = requests.get(
             f'{WEATHERAPI_URL}forecast.json?key={os.environ["API_KEY_WEATHERAPI"]}&q={self.location}&days={self.days_forecast}&aqi=yes')
         weather_forecast_raw: pd.DataFrame = self.format_weatherapi_data(req)
+        weather_forecast_raw = weather_forecast_raw.drop('time_epoch', axis=1)
+        weather_forecast_raw = weather_forecast_raw.drop('wind_dir', axis=1)
         return weather_forecast_raw
 
 
