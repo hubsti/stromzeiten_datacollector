@@ -7,7 +7,7 @@ import pandas as pd
 from pytz import timezone
 import requests
 
-from util.weatherapi_tags import CURRENT_WEATHER_TAGS, WEATHER_TAGS
+from utils.weatherapi_tags import CURRENT_WEATHER_TAGS, WEATHER_TAGS
 
 WEATHERAPI_URL: str = 'http://api.weatherapi.com/v1/'
 
