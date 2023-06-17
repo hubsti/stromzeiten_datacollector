@@ -141,4 +141,6 @@ class Prices(EntsoeData):
         client: EntsoePandasClient = self.collector()
         prices_raw: pd.DataFrame = client.query_day_ahead_prices(
             country_code=self.country_code, start=self.api_start_date, end=self.api_end_date)
+        prices_raw = prices_raw.to_frame()
+        prices_raw= prices_raw.rename( columns={0 :'Price'})
         return prices_raw
