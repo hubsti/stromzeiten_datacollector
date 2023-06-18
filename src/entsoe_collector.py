@@ -32,12 +32,6 @@ class EntsoeData(object):
     api_start_date: pd.Timestamp
     api_end_date: pd.Timestamp
     country_code: str
-    api_forecast_end_date: pd.Timestamp
-
-    def __post_init__(self):
-        if self.api_forecast_end_date is None:
-            self.api_forecast_end_date = pd.Timestamp(
-                "2023-06-20 00:00:00", tz="Europe/Brussels")
 
     def collector(self) -> EntsoePandasClient:
         client = EntsoePandasClient(api_key=os.environ["ENTSOE_API_KEY"])
@@ -154,24 +148,24 @@ class Prices(EntsoeData):
 
 
 class Forecast(EntsoeData):
-    def fetch_generation(self) -> pd.DataFrame:
+    def fetch_generation(self, api_forecast_end_date) -> pd.DataFrame:
         client: EntsoePandasClient = self.collector()
         generation_forecast: pd.DataFrame = client.query_generation_forecast(
-            country_code=self.country_code, start=self.api_start_date, end=self.api_forecast_end_date)
+            country_code=self.country_code, start=self.api_start_date, end=api_forecast_end_date)
         generation_forecast = generation_forecast.to_frame()
         generation_forecast = generation_forecast.rename(
             columns={'Actual Aggregated': 'Generation_forecast'})
         return generation_forecast
 
-    def fetch_renewables(self) -> pd.DataFrame:
+    def fetch_renewables(self, api_forecast_end_date) -> pd.DataFrame:
         client: EntsoePandasClient = self.collector()
         renewables_forecast: pd.DataFrame = client.query_wind_and_solar_forecast(
-            country_code=self.country_code, start=self.api_start_date, end=self.api_forecast_end_date)
+            country_code=self.country_code, start=self.api_start_date, end=api_forecast_end_date)
         return renewables_forecast
     
-    def calculate_emission_forecas(self):
-        generation_forecast = self.fetch_generation()
-        renewables_forecast = self.fetch_renewables()
+    def calculate_emission_forecas(self, api_forecast_end_date):
+        generation_forecast = self.fetch_generation(api_forecast_end_date)
+        renewables_forecast = self.fetch_renewables(api_forecast_end_date)
         renewables_forecast["Sum"]=renewables_forecast.sum(axis="columns")
         generation_forecast['NonRenewables'] = generation_forecast.Generation_forecast - renewables_forecast.Sum
         forecast_cei = pd.DataFrame(columns=['Solar','Wind_off','Wind_on','NonRenewables'])
