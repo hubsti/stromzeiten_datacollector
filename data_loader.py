@@ -3,20 +3,22 @@ import datetime
 import logging
 import os
 import time
+from itertools import count
 
 import pandas as pd
 from dotenv import load_dotenv
 from pymongo import MongoClient
 
-from src.db_load import load_to_db
+from src.db_load import load_forecast_to_db, load_to_db
 from src.entsoe_collector import Generation, Load, Prices
+from src.forecast_calculator import Next3DaysForecast
 from src.weatherapi_collector import WeatherForecast
 from utils.logger import CustomFormatter
 
 load_dotenv()
 
 # Set up logging
-logger = logging.getLogger("Testing")
+logger = logging.getLogger("Data_Loader")
 logger.setLevel(logging.INFO)
 ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
@@ -80,6 +82,18 @@ def main(country_code, country, city, timezone):
         logger.info("loading weather data to database")
         time_elapsed = load_to_db(forecast, country)
         logger.info(f"loading weather data to db executed in {time_elapsed}!")
+    except Exception as e:
+        logger.exception(f"error while fetching weather forecast data: {e}")
+        pass
+    
+
+    logger.info(
+        f"fetching and calculating carbon emission forecast for {country}")
+    try:
+        forecast_data, historical_data  = Next3DaysForecast(country_code, country, city, timezone).train_and_predict()
+        logger.info("loading forecast data to database")
+        time_elapsed = load_forecast_to_db(forecast_data, country)
+        logger.info(f"loading forecast data to db executed in {time_elapsed}!")
     except Exception as e:
         logger.exception(f"error while fetching weather forecast data: {e}")
         pass

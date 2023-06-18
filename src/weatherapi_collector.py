@@ -83,7 +83,7 @@ class WeatherForecast(WeatherAPIData):
 
 class HistoricalWeather(WeatherAPIData):
     api_date_from = "2023-06-15"
-    def fetch(self) -> pd.DataFrame:
+    def fetch(self, api_date_from) -> pd.DataFrame:
         """Fetch historical weather data
 
         Returns:

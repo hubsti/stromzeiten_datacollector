@@ -104,6 +104,7 @@ class Generation(EntsoeData):
         carbon_emissions["Carbon_Intensity"] = (
             carbon_emissions["Total"] * 1e6 / (processed_generation["Total"] * 1e3))
         carbon_emissions = carbon_emissions.add_suffix('_CEI')
+        carbon_emissions = carbon_emissions.fillna(0.0)
         return carbon_emissions
 
     def fetch_process_and_calculate_emissions(self) -> tuple[pd.DataFrame, pd.DataFrame]:
