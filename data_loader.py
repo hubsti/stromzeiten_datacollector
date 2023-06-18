@@ -7,7 +7,7 @@ from itertools import count
 
 import pandas as pd
 from dotenv import load_dotenv
-from pymongo import MongoClient
+
 
 from src.db_load import load_forecast_to_db, load_to_db
 from src.entsoe_collector import Generation, Load, Prices
