@@ -6,18 +6,28 @@ import time
 from itertools import count
 
 import pandas as pd
+import pandas as pds
+import psycopg
 from dotenv import load_dotenv
-
+from sqlalchemy import create_engine
 
 from src.db_load import load_forecast_to_db, load_to_db
 from src.entsoe_collector import Generation, Load, Prices
 from src.forecast_calculator import Next3DaysForecast
 from src.weatherapi_collector import WeatherForecast
 from utils.logger import CustomFormatter
+from utils.db_cleanup import remove_dupilcates
 
 load_dotenv()
 
 # Set up logging
+alchemyEngine   = create_engine('postgresql+psycopg2://hubertstinia:@127.0.0.1', pool_recycle=3600);
+
+ 
+
+# Connect to PostgreSQL server
+
+dbConnection    = alchemyEngine.connect();
 logger = logging.getLogger("Data_Loader")
 logger.setLevel(logging.INFO)
 ch = logging.StreamHandler()
@@ -39,14 +49,13 @@ def main(country_code, country, city, timezone):
     try:
         generation, emissions = Generation(
             start_date, end_date, country_code).fetch_process_and_calculate_emissions()
-        logger.info("loading generation data to database")
-        time_elapsed = load_to_db(generation, country)
-        logger.info(
-            f"loading generation data to db executed in {time_elapsed}!")
-        logger.info("loading emissions data to database")
-        time_elapsed = load_to_db(emissions, country)
-        logger.info(
-            f"loading emissions data to db executed in {time_elapsed}!")
+        print("---------------Generation-----------------")
+        print(generation)
+        
+        remove_dupilcates(generation, alchemyEngine)
+
+        print("---------------Emission-----------------")
+        print(emissions)
     except Exception as e:
         logger.exception(f"error while fetching generation data: {e}")
         pass
@@ -55,12 +64,12 @@ def main(country_code, country, city, timezone):
         f"fetching load data from {start_date} to {end_date} for a country {country}")
     try:
         load: pd.DataFrame = Load(start_date, end_date, country_code).fetch()
+        print("---------------load-----------------")
+        print(load)
         logger.info("loading consumption data to database")
-        time_elapsed = load_to_db(load, country)
-        logger.info(
-            f"loading consumption data to db executed in {time_elapsed}!")
+    
     except Exception as e:
-        logger.error(f"error while fetching load data: {e}")
+        logger.error(f"error while fetching load data: {e}") 
         pass
 
     logger.info(
@@ -68,9 +77,9 @@ def main(country_code, country, city, timezone):
     try:
         prices: pd.DataFrame = Prices(
             start_date, end_date, country_code).fetch()
+        print("---------------Prices-----------------")
+        print(prices)
         logger.info("loading prices data to database")
-        time_elapsed = load_to_db(prices, country)
-        logger.info(f"loading prices data to db executed in {time_elapsed}!")
     except Exception as e:
         logger.exception(f"error while fetchin prices data: {e}")
         pass
@@ -79,9 +88,9 @@ def main(country_code, country, city, timezone):
         f"fetching weather forecast in {city} for today")
     try:
         forecast = WeatherForecast(city, timezone, DAYS_FORECAST).fetch()
+        print("---------------weather-----------------")
+        print(forecast)
         logger.info("loading weather data to database")
-        time_elapsed = load_to_db(forecast, country)
-        logger.info(f"loading weather data to db executed in {time_elapsed}!")
     except Exception as e:
         logger.exception(f"error while fetching weather forecast data: {e}")
         pass
@@ -92,11 +101,12 @@ def main(country_code, country, city, timezone):
     try:
         forecast_data, historical_data  = Next3DaysForecast(country_code, country, city, timezone).train_and_predict()
         logger.info("loading forecast data to database")
-        time_elapsed = load_forecast_to_db(forecast_data, country)
-        logger.info(f"loading forecast data to db executed in {time_elapsed}!")
+        print("---------------Forecast-----------------")
+        print(forecast_data)
     except Exception as e:
         logger.exception(f"error while fetching weather forecast data: {e}")
         pass
+    dbConnection.close();
 
 
 if __name__ == "__main__":
