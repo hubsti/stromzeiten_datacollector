@@ -67,6 +67,8 @@ class Next3DaysForecast(object):
         historical_data = emissions.join(historical_weather)
         weather_forecast = weather_forecast[~weather_forecast.index.isin(
             historical_data.index)]
+        historical_data["country_code"] = self.country_code
+        weather_forecast["country_code"] = self.country_code
         return historical_data, weather_forecast
 
     def create_features(self, df):
@@ -115,4 +117,6 @@ class Next3DaysForecast(object):
                 eval_set=[(X_train, y_train)],
                 verbose=0)
         weather_forecast_featrues['Cei_prediction'] = reg.predict(X_test)
+        weather_forecast_featrues["country_code"] = self.country_code
+        historical_data_featrues["country_code"] = self.country_code
         return weather_forecast_featrues, historical_data_featrues

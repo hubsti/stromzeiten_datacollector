@@ -89,7 +89,7 @@ def main(country_code, country, city, timezone):
     logger.info(
         f"fetching weather forecast in {city} for today")
     try:
-        forecast = WeatherForecast(city, timezone, DAYS_FORECAST).fetch()
+        forecast = WeatherForecast(city, timezone, DAYS_FORECAST, country_code).fetch()
         print("---------------weather-----------------")
         print(forecast)
         logger.info("loading weather data to database")

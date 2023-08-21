@@ -106,6 +106,7 @@ class Generation(EntsoeData):
             carbon_emissions["Total"] * 1e6 / (processed_generation["Total"] * 1e3))
         carbon_emissions = carbon_emissions.add_suffix('_CEI')
         carbon_emissions = carbon_emissions.fillna(0.0)
+        carbon_emissions["country_code"] = self.country_code
         return carbon_emissions
 
     def fetch_process_and_calculate_emissions(self) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -129,6 +130,7 @@ class Load(EntsoeData):
         client: EntsoePandasClient = self.collector()
         load_raw: pd.DataFrame = client.query_load(
             country_code=self.country_code, start=self.api_start_date, end=self.api_end_date)
+        load_raw["country_code"] = self.country_code
         return load_raw
 
 
@@ -146,6 +148,7 @@ class Prices(EntsoeData):
             country_code=self.country_code, start=self.api_start_date, end=self.api_end_date)
         prices_raw = prices_raw.to_frame()
         prices_raw = prices_raw.rename(columns={0: 'Price'})
+        prices_raw["country_code"] = self.country_code
         return prices_raw
 
 
@@ -157,12 +160,14 @@ class Forecast(EntsoeData):
         generation_forecast = generation_forecast.to_frame()
         generation_forecast = generation_forecast.rename(
             columns={'Actual Aggregated': 'Generation_forecast'})
+        generation_forecast["country_code"] = self.country_code
         return generation_forecast
 
     def fetch_renewables(self, api_forecast_end_date) -> pd.DataFrame:
         client: EntsoePandasClient = self.collector()
         renewables_forecast: pd.DataFrame = client.query_wind_and_solar_forecast(
             country_code=self.country_code, start=self.api_start_date, end=api_forecast_end_date)
+        renewables_forecast["country_code"] = self.country_code
         return renewables_forecast
     
     def calculate_emission_forecas(self, api_forecast_end_date):
@@ -177,4 +182,5 @@ class Forecast(EntsoeData):
         forecast_cei["NonRenewables"] = generation_forecast['NonRenewables']*1e3 * 10 / 1e6
         forecast_cei["Total"] = forecast_cei.sum(axis="columns")
         forecast_cei["Carbon_Intensity"] = (forecast_cei["Total"] * 1e6 / (generation_forecast["Generation_forecast"] * 1e3))
+        forecast_cei["country_code"] = self.country_code
         return forecast_cei
