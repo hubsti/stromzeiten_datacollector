@@ -21,7 +21,7 @@ from utils.db_cleanup import remove_dupilcates
 load_dotenv()
 
 # Set up logging
-alchemyEngine   = create_engine('postgresql+psycopg2://hubertstinia:@127.0.0.1', pool_recycle=3600);
+alchemyEngine   = create_engine('postgresql+psycopg2://admin:admin@127.0.0.1/stromzeiten', pool_recycle=3600);
 
  
 
@@ -51,9 +51,8 @@ def main(country_code, country, city, timezone):
             start_date, end_date, country_code).fetch_process_and_calculate_emissions()
         print("---------------Generation-----------------")
         print(generation)
-        
-        remove_dupilcates(generation, alchemyEngine)
-
+        remove_dupilcates(generation, alchemyEngine, country_code)
+        #generation.to_sql('generation_acc', alchemyEngine,if_exists='append')
         print("---------------Emission-----------------")
         print(emissions)
     except Exception as e:

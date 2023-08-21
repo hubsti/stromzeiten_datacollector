@@ -85,7 +85,7 @@ class Generation(EntsoeData):
             TAGS_NON_RENEW)].sum(axis=1)
         generation_processed["Total"] = generation_processed["NonRenewables"] + \
             generation_processed["Renewables"]
-        generation_processed["Country_Code"] = self.country_code
+        generation_processed["country_code"] = self.country_code
         return generation_processed
 
     def calculate_carbon_emissions(self, processed_generation: pd.DataFrame) -> pd.DataFrame:
