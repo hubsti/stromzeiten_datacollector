@@ -50,14 +50,14 @@ class Next3DaysForecast(object):
         generation, emissions = Generation(
             start_date, end_date, self.country_code).fetch_process_and_calculate_emissions()
         weather_forecast = WeatherForecast(
-            self.city, self.tz, DAYS_FORECAST).fetch()
+            self.city, self.tz, DAYS_FORECAST,self.country_code).fetch()
 
         week_of_data = pd.date_range(
             WEEK_AGO, TOMORROW-datetime.timedelta(days=1), freq='d')
         historical_weather_list = []
         for day in week_of_data:
             historical = HistoricalWeather(
-                self.city, self.tz, DAYS_FORECAST).fetch(day)
+                self.city, self.tz, DAYS_FORECAST, self.country_code).fetch(day)
             historical_weather_list.append(historical)
         historical_weather = pd. concat(historical_weather_list)
         #change data to hourly granurality if needed (case of german data)
