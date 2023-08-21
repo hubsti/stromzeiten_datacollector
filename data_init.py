@@ -51,9 +51,9 @@ def main(country_code, country, city, timezone):
             start_date, end_date, country_code).fetch_process_and_calculate_emissions()
         print("---------------Generation-----------------")
         print(generation)
-        remove_dupilcates(generation, alchemyEngine, country_code, "generation_acc")
-        remove_dupilcates(emissions, alchemyEngine, country_code, "emissions_acc")
-        #generation.to_sql('generation_acc', alchemyEngine,if_exists='append')
+        #remove_dupilcates(generation, alchemyEngine, country_code)
+        generation.to_sql('generation_acc', alchemyEngine,if_exists='append')
+        emissions.to_sql('emissions_acc', alchemyEngine,if_exists='append')
         print("---------------Emission-----------------")
         print(emissions)
     except Exception as e:
@@ -66,7 +66,7 @@ def main(country_code, country, city, timezone):
         load: pd.DataFrame = Load(start_date, end_date, country_code).fetch()
         print("---------------load-----------------")
         print(load)
-        remove_dupilcates(load, alchemyEngine, country_code, "load_acc")
+        load.to_sql('load_acc', alchemyEngine,if_exists='append')
         logger.info("loading consumption data to database")
     
     except Exception as e:
@@ -80,8 +80,8 @@ def main(country_code, country, city, timezone):
             start_date, end_date, country_code).fetch()
         print("---------------Prices-----------------")
         print(prices)
-        remove_dupilcates(prices, alchemyEngine, country_code, "prices_acc")
         logger.info("loading prices data to database")
+        prices.to_sql('prices_acc', alchemyEngine,if_exists='append')
     except Exception as e:
         logger.exception(f"error while fetchin prices data: {e}")
         pass
@@ -93,7 +93,7 @@ def main(country_code, country, city, timezone):
         print("---------------weather-----------------")
         print(forecast)
         logger.info("loading weather data to database")
-        remove_dupilcates(forecast, alchemyEngine, country_code, "weather_acc")
+        forecast.to_sql('weather_acc', alchemyEngine,if_exists='append')
     except Exception as e:
         logger.exception(f"error while fetching weather forecast data: {e}")
         pass
@@ -104,9 +104,9 @@ def main(country_code, country, city, timezone):
     try:
         forecast_data, historical_data  = Next3DaysForecast(country_code, country, city, timezone).train_and_predict()
         logger.info("loading forecast data to database")
-        remove_dupilcates(forecast_data, alchemyEngine, country_code, "forecast_acc")
         print("---------------Forecast-----------------")
         print(forecast_data)
+        forecast_data.to_sql('forecast_acc', alchemyEngine,if_exists='append')
     except Exception as e:
         logger.exception(f"error while fetching weather forecast data: {e}")
         pass
