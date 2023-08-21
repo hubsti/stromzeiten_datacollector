@@ -12,7 +12,10 @@ def remove_dupilcates(df, dbengine, country_code, table):
     #print(dataFrame)
     with psycopg.connect("dbname=stromzeiten user=admin host=localhost password=admin") as conn:
         with conn.cursor() as cur:
-                cur.execute(f"DELETE FROM {table} WHERE index>=\'{start_date}\' and index <=\'{end_date}\' and country_code = \'{country_code}\' ;") 
+                if table == "weather_acc" or table == "forecast_acc":
+                    cur.execute(f"DELETE FROM {table} WHERE time>=\'{start_date}\' and time <=\'{end_date}\' and country_code = \'{country_code}\' ;") 
+                else:
+                    cur.execute(f"DELETE FROM {table} WHERE index>=\'{start_date}\' and index <=\'{end_date}\' and country_code = \'{country_code}\' ;") 
                 conn.commit()    
                 conn.close()
     #dataFrame       = pd.read_sql(f"select * from \"{table}\"", dbengine)
