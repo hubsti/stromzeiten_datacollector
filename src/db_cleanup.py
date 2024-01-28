@@ -41,11 +41,6 @@ def update_dataframe(df, engine, country_code, table_name, index_label='index'):
     db_df = db_df.set_index(index_label)
     db_df.index.name = None
     db_df.columns.name = None
-    print('---------------------db df---------------------')
-    print(db_df)
-    # Perform an outer join of df and db_df on index
-    print('---------------------oryginal---------------------')
-    print(df)
 
     # Perform an outer join of df and db_df on index
     merged_df = df.merge(db_df, how='outer', indicator=True, left_index=True, right_index=True)
@@ -59,11 +54,6 @@ def update_dataframe(df, engine, country_code, table_name, index_label='index'):
     new_df = new_df.drop(columns='_merge')
     if table_name == 'forecast_data':
         new_df.index.name = "time"
-    print(merged_df)
     # Take only the rows that exist in df and don't exist in db_df
-
-
-    print('---------------------after merge---------------------')
-    print(new_df)
     # Write these rows to the database
     new_df.to_sql(name=table_name, con=engine, if_exists='append')
