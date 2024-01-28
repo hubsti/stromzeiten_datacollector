@@ -11,6 +11,7 @@ from sqlalchemy import create_engine
 from src.entsoe_collector import Generation, Load, Prices
 from src.forecast_calculator import Next3DaysForecast
 from src.weatherapi_collector import WeatherForecast
+from time_periods import create_time_periods
 from utils.logger import CustomFormatter
 from src.db_cleanup import insert_dataframe, update_dataframe
 from utils.cron import european_countries
@@ -147,9 +148,12 @@ def main():
                 update_dataframe(
                     forecast_data, alchemyEngine, country_code, "forecast_data", "time"
                 )
+            if country_code != "DE":
+                create_time_periods(country_code)
         except Exception as e:
             logger.exception(f"error while fetching weather forecast data: {e}")
             pass
+
         dbConnection.close()
 
 
