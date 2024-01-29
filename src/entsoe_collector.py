@@ -56,6 +56,10 @@ class Generation(EntsoeData):
         # remove duplicated columns
         generation_raw = generation_raw.loc[:, ~
                                             generation_raw.columns.duplicated()].copy()
+        time_diff = generation_raw.index.to_series().diff().min()
+        if time_diff == pd.Timedelta(minutes=15):
+            # If the data is in 15-minute intervals, resample it to 1-hour intervals
+            generation_raw = generation_raw.resample('H').mean()
         return generation_raw
 
     def process(self, generation_raw) -> pd.DataFrame:
