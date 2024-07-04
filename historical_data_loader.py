@@ -24,7 +24,7 @@ load_dotenv()
 
 # Set up logging
 alchemyEngine = create_engine(
-    "postgresql+psycopg2://postgres:<3Fuksik69@127.0.0.1", pool_recycle=3600
+    "postgresql+psycopg2://###:###@127.0.0.1", pool_recycle=3600
 )
 
 
